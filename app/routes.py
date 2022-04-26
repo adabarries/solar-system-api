@@ -26,3 +26,35 @@ def return_planet_list():
             "weather": planet.weather
         })
     return jsonify(planet_response) 
+
+
+@planets_bp.route('/<planet_id>', methods = ['GET'])
+def get_one_planet(planet_id):
+    try:
+        planet_id = int(planet_id)
+    except ValueError:
+        rsp = {"msg": f"Invalid ID {planet_id}"}
+        return jsonify(rsp), 400
+
+    chosen_planet = None
+    for planet in planet_list:
+        if planet.id == planet_id:
+            chosen_planet = planet
+            break
+
+    if chosen_planet is None:
+        rsp = {"msg": f"Could not find planet with ID {planet_id}"}
+        return jsonify(rsp), 404
+
+    rsp = {
+        "id": planet.id,
+        "name": planet.name,
+        "description": planet.description,
+        "weather": planet.weather
+    }
+    
+    return jsonify(rsp), 200
+
+
+
+    
