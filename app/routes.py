@@ -7,8 +7,11 @@ class Planet:
         self.description = description
         self.weather = weather
 
-planet_list = [Planet(1, "Mercury", "a rocky planet", "hot/dry"), 
-Planet(2, "Venus", "a yellow planet", "hot/stormy"), Planet(3, "Earth", "a blue planet", "habitable")]
+planet_list = [
+    Planet(1, "Mercury", "a rocky planet", "hot/dry"), 
+    Planet(2, "Venus", "a yellow planet", "hot/stormy"), 
+    Planet(3, "Earth", "a blue planet", "habitable")
+    ]
 
 planets_bp = Blueprint('planets', __name__, url_prefix="/planets")
 
