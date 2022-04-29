@@ -14,6 +14,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     
+    from .models.solar_system import Planet
     from .routes import planets_bp
     app.register_blueprint(planets_bp)
 
