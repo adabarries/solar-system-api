@@ -1,60 +1,61 @@
-from flask import Blueprint, jsonify
-
-class Planet:
-    def __init__(self, id, name, description, weather):
-        self.id = id
-        self.name = name
-        self.description = description
-        self.weather = weather
-
-planet_list = [
-    Planet(1, "Mercury", "a rocky planet", "hot/dry"), 
-    Planet(2, "Venus", "a yellow planet", "hot/stormy"), 
-    Planet(3, "Earth", "a blue planet", "habitable")
-    ]
+from flask import Blueprint, jsonify, request
+from app.models.solar_system import Planet
+from app import db
 
 planets_bp = Blueprint('planets', __name__, url_prefix="/planets")
 
+@planets_bp.route('', methods = ['POST'])
+def create_one_planet():
+    request_body = request.get_json()
+    new_planet = Planet(name = request_body["name"],
+                        description = request_body["description"],
+                        weather = request_body["weather"])
+    db.session.add(new_planet)
+    db.session.commit()
+
+    return {
+        "id": new_planet.id,
+        "msg": f"Successfully created planet with ID {new_planet.id}"
+    }, 201    
+
 @planets_bp.route('', methods = ['GET'])
-def return_planet_list():
-    planet_response = []
-    for planet in planet_list:
-        planet_response.append({
+def get_all_planets():
+    planets = Planet.query.all()
+    planets_response = []
+    for planet in planets:
+        planets_response.append({
             "id": planet.id,
             "name": planet.name,
             "description": planet.description,
             "weather": planet.weather
         })
-    return jsonify(planet_response) 
+
+    return jsonify(planets_response), 200
 
 
-@planets_bp.route('/<planet_id>', methods = ['GET'])
-def get_one_planet(planet_id):
-    try:
-        planet_id = int(planet_id)
-    except ValueError:
-        rsp = {"msg": f"Invalid ID {planet_id}"}
-        return jsonify(rsp), 400
+# @planets_bp.route('/<planet_id>', methods = ['GET'])
+# def get_one_planet(planet_id):
+#     try:
+#         planet_id = int(planet_id)
+#     except ValueError:
+#         rsp = {"msg": f"Invalid ID {planet_id}"}
+#         return jsonify(rsp), 400
 
-    chosen_planet = None
-    for planet in planet_list:
-        if planet.id == planet_id:
-            chosen_planet = planet
-            break
+#     chosen_planet = None
+#     for planet in planet_list:
+#         if planet.id == planet_id:
+#             chosen_planet = planet
+#             break
 
-    if chosen_planet is None:
-        rsp = {"msg": f"Could not find planet with ID {planet_id}"}
-        return jsonify(rsp), 404
+#     if chosen_planet is None:
+#         rsp = {"msg": f"Could not find planet with ID {planet_id}"}
+#         return jsonify(rsp), 404
 
-    rsp = {
-        "id": planet.id,
-        "name": planet.name,
-        "description": planet.description,
-        "weather": planet.weather
-    }
+#     rsp = {
+#         "id": planet.id,
+#         "name": planet.name,
+#         "description": planet.description,
+#         "weather": planet.weather
+#     }
     
-    return jsonify(rsp), 200
-
-
-
-    
+#     return jsonify(rsp), 200
