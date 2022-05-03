@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, jsonify, request
 from app.models.solar_system import Planet
 from app import db
@@ -32,30 +33,69 @@ def get_all_planets():
 
     return jsonify(planets_response), 200
 
+@planets_bp.route('/<planet_id>', methods = ['GET'])
+def get_one_planet(planet_id):
+    try:
+        planet_id = int(planet_id)
+    except ValueError:
+        rsp = {"msg": f"Invalid ID: {planet_id}"}
+        return jsonify(rsp), 400
+    chosen_planet = Planet.query.get(planet_id)
+    if chosen_planet is None:
+        rsp = {"msg": f"Could not find planet with ID: {planet_id}"}
+        return jsonify(rsp), 404
 
-# @planets_bp.route('/<planet_id>', methods = ['GET'])
-# def get_one_planet(planet_id):
-#     try:
-#         planet_id = int(planet_id)
-#     except ValueError:
-#         rsp = {"msg": f"Invalid ID {planet_id}"}
-#         return jsonify(rsp), 400
+    rsp = {
+        "id": chosen_planet.id,
+        "name": chosen_planet.name,
+        "description": chosen_planet.description,
+        "weather": chosen_planet.weather
+    }  
+    return jsonify(rsp), 200
 
-#     chosen_planet = None
-#     for planet in planet_list:
-#         if planet.id == planet_id:
-#             chosen_planet = planet
-#             break
+@planets_bp.route('/<planet_id>', methods = ['PUT'])
+def put_one_planet(planet_id):
+    try:
+        planet_id = int(planet_id)
+    except ValueError:
+        rsp = {"msg": f"Invalid ID: {planet_id}"}
+        return jsonify(rsp), 400
+    chosen_planet = Planet.query.get(planet_id)
+    if chosen_planet is None:
+        rsp = {"msg": f"Could not find planet with ID: {planet_id}"}
+        return jsonify(rsp), 404
 
-#     if chosen_planet is None:
-#         rsp = {"msg": f"Could not find planet with ID {planet_id}"}
-#         return jsonify(rsp), 404
+    request_body = request.get_json()    
+    try:
+        chosen_planet.name = request_body["name"]
+        chosen_planet.description = request_body["description"]
+        chosen_planet.weather = request_body["weather"]
+    except KeyError:
+        return {
+            "msg": "name, description, and weather are required."
+        }, 400
+    db.session.commit()
 
-#     rsp = {
-#         "id": planet.id,
-#         "name": planet.name,
-#         "description": planet.description,
-#         "weather": planet.weather
-#     }
-    
-#     return jsonify(rsp), 200
+    return {
+        "msg": f"planet #{chosen_planet.id} successfully replaced"
+    }, 200        
+
+@planets_bp.route('/<planet_id>', methods = ['DELETE'])
+def delete_one_planet(planet_id):
+    try:
+        planet_id = int(planet_id)
+    except ValueError:
+        rsp = {"msg": f"Invalid ID: {planet_id}"}
+        return jsonify(rsp), 400
+
+    chosen_planet = Planet.query.get(planet_id)
+    if chosen_planet is None:
+        rsp = {"msg": f"Could not find planet with ID: {planet_id}"}
+        return jsonify(rsp), 404
+
+    db.session.delete(chosen_planet)
+    db.session.commit()
+
+    return {
+        "msg": f"planet #{chosen_planet.id} successfully deleted."
+    }, 200    
