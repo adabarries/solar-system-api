@@ -21,7 +21,39 @@ def create_one_planet():
 
 @planets_bp.route('', methods = ['GET'])
 def get_all_planets():
-    planets = Planet.query.all()
+
+    params = request.args
+
+    if "name" in params and "description" in params and "weather" in params:
+        name_param = params["name"]
+        description_param = params["description"]
+        weather_param = params["weather"]
+        planets = Planet.query.filter_by(name = name_param, description = description_param, weather = weather_param)
+    elif "name" in params and "description" in params:
+        name_param = params["name"]
+        description_param = params["description"]
+        planets = Planet.query.filter_by(name = name_param, description = description_param)
+    elif "name" in params and "weather" in params:
+        name_param = params["name"]
+        weather_param = params["weather"]
+        planets = Planet.query.filter_by(name = name_param, weather = weather_param)
+    elif "description" in params and "weather" in params:
+        description_param = params["description"]
+        weather_param = params["weather"]
+        planets = Planet.query.filter_by(description = description_param, weather = weather_param)
+    elif "name" in params:
+        name_param = params["name"]
+        planets = Planet.query.filter_by(name = name_param)
+    elif "description" in params:
+        description_param = params["description"]
+        planets = Planet.query.filter_by(description = description_param)
+    elif "weather" in params:
+        weather_param = params["weather"]
+        planets = Planet.query.filter_by(weather = weather_param)
+    else:
+        planets = Planet.query.all()
+
+    
     planets_response = []
     for planet in planets:
         planets_response.append({
