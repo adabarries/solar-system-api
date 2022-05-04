@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, abort, make_response
 from app.models.solar_system import Planet
 from app import db
 
@@ -18,6 +18,24 @@ def create_one_planet():
         "id": new_planet.id,
         "msg": f"Successfully created planet with ID {new_planet.id}"
     }, 201    
+
+
+def get_planet_or_abort(planet_id):
+    try:
+        planet_id = int(planet_id)
+    except ValueError:
+        rsp = {"msg": f"Invalid ID: {planet_id}"}
+        abort(make_response(jsonify(rsp), 400))
+    
+    chosen_planet = Planet.query.get(planet_id)
+    if chosen_planet is None:
+        rsp = {"msg": f"Could not find planet with ID: {planet_id}"}
+        abort(make_response(jsonify(rsp), 404))
+
+    return chosen_planet
+        
+        
+
 
 @planets_bp.route('', methods = ['GET'])
 def get_all_planets():
@@ -67,15 +85,7 @@ def get_all_planets():
 
 @planets_bp.route('/<planet_id>', methods = ['GET'])
 def get_one_planet(planet_id):
-    try:
-        planet_id = int(planet_id)
-    except ValueError:
-        rsp = {"msg": f"Invalid ID: {planet_id}"}
-        return jsonify(rsp), 400
-    chosen_planet = Planet.query.get(planet_id)
-    if chosen_planet is None:
-        rsp = {"msg": f"Could not find planet with ID: {planet_id}"}
-        return jsonify(rsp), 404
+    chosen_planet = get_planet_or_abort(planet_id)
 
     rsp = {
         "id": chosen_planet.id,
@@ -87,15 +97,7 @@ def get_one_planet(planet_id):
 
 @planets_bp.route('/<planet_id>', methods = ['PUT'])
 def put_one_planet(planet_id):
-    try:
-        planet_id = int(planet_id)
-    except ValueError:
-        rsp = {"msg": f"Invalid ID: {planet_id}"}
-        return jsonify(rsp), 400
-    chosen_planet = Planet.query.get(planet_id)
-    if chosen_planet is None:
-        rsp = {"msg": f"Could not find planet with ID: {planet_id}"}
-        return jsonify(rsp), 404
+    chosen_planet = get_planet_or_abort(planet_id)
 
     request_body = request.get_json()    
     try:
@@ -114,16 +116,7 @@ def put_one_planet(planet_id):
 
 @planets_bp.route('/<planet_id>', methods = ['DELETE'])
 def delete_one_planet(planet_id):
-    try:
-        planet_id = int(planet_id)
-    except ValueError:
-        rsp = {"msg": f"Invalid ID: {planet_id}"}
-        return jsonify(rsp), 400
-
-    chosen_planet = Planet.query.get(planet_id)
-    if chosen_planet is None:
-        rsp = {"msg": f"Could not find planet with ID: {planet_id}"}
-        return jsonify(rsp), 404
+    chosen_planet = get_planet_or_abort(planet_id)
 
     db.session.delete(chosen_planet)
     db.session.commit()
